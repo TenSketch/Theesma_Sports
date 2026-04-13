@@ -21,6 +21,9 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -105,8 +108,8 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Product Table */}
-      <div className="bg-white/5 border border-white/10 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-white/5 border border-white/10 overflow-x-auto custom-scrollbar custom-scrollbar-horizontal">
+        <table className="min-w-[900px] w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/10 bg-white/[0.02]">
               <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500">
@@ -134,8 +137,19 @@ export default function AdminProductsPage() {
               <tr key={product.id || product._id} className="hover:bg-white/[0.01] transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/5 border border-white/10 p-1 flex-shrink-0">
-                       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-opacity" />
+                    <div className="w-12 h-12 bg-white/5 border border-white/10 p-1 flex-shrink-0 cursor-pointer" onClick={() => {
+                      const imgs = Array.isArray(product.images) && product.images.length > 0 
+                        ? product.images 
+                        : [product.image || '/img/gear.png'];
+                      setLightboxImages(imgs);
+                      setLightboxIndex(0);
+                      setLightboxOpen(true);
+                    }}>
+                       <img 
+                        src={(Array.isArray(product.images) && product.images[0]) || product.image || '/img/gear.png'} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover transition-opacity" 
+                       />
                     </div>
                     <div>
                        <p className="text-xs font-black text-white uppercase tracking-tighter">{product.name}</p>
@@ -208,6 +222,55 @@ export default function AdminProductsPage() {
             <button className="hover:text-white transition-colors">Next</button>
          </div>
       </div>
+
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4 py-8">
+          <div className="relative w-full max-w-4xl bg-black/95 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            >
+              ✕
+            </button>
+            <div className="relative h-[60vh] md:h-[70vh] bg-black">
+              <img
+                src={lightboxImages[lightboxIndex] || '/img/gear.png'}
+                alt="Gallery image"
+                className="h-full w-full object-contain p-4"
+              />
+              {lightboxImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setLightboxIndex((lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length)}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 border border-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={() => setLightboxIndex((lightboxIndex + 1) % lightboxImages.length)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 border border-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+            </div>
+            {lightboxImages.length > 1 && (
+              <div className="flex items-center justify-center gap-3 p-4 bg-white/5 overflow-x-auto custom-scrollbar">
+                {lightboxImages.map((src, index) => (
+                  <button
+                    key={src + index}
+                    onClick={() => setLightboxIndex(index)}
+                    className={`h-16 w-16 md:h-20 md:w-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${index === lightboxIndex ? 'border-brand-blue scale-105' : 'border-white/10 opacity-50 hover:opacity-100'}`}
+                  >
+                    <img src={src} alt={`Thumbnail ${index + 1}`} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

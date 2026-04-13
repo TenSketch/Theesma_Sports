@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   Users,
   ShoppingBag,
-  Settings
+  Settings,
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -65,6 +66,27 @@ export default function AdminDashboard() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="glass p-8 rounded-3xl">
+        <h4 className="text-lg font-bold font-outfit text-white mb-6 flex items-center gap-2">
+          <Zap size={18} className="text-brand-blue" /> Quick Actions
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/admin/products/new" className="flex items-center justify-center gap-3 px-6 py-4 bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/20 rounded-xl transition-all duration-300 group">
+            <Package size={18} className="text-brand-blue group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-bold text-white">Add Product</span>
+          </Link>
+          <Link href="/admin/events" className="flex items-center justify-center gap-3 px-6 py-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-xl transition-all duration-300 group">
+            <Award size={18} className="text-brand-orange group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-bold text-white">Add Event</span>
+          </Link>
+          <Link href="/admin/orders" className="flex items-center justify-center gap-3 px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 group">
+            <ShoppingBag size={18} className="text-gray-400 group-hover:text-white transition-colors" />
+            <span className="text-sm font-bold text-white">View Orders</span>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

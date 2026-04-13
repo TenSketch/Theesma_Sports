@@ -214,13 +214,17 @@ export default function AdminEventsPage() {
       {/* Events Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEvents.map((event) => (
-          <div key={event.id} className="bg-white/5 border border-white/10 p-8 group hover:border-brand-blue/30 transition-all flex flex-col justify-between h-full relative">
+          <div key={event.id} className="bg-white/5 border border-white/10 p-8 group hover:border-brand-blue/30 transition-all flex flex-col justify-between h-full relative overflow-hidden rounded-3xl">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 blur-3xl pointer-events-none" />
+            
             <div>
-              <div className="flex justify-between items-start mb-8">
-                 <div className="p-3 bg-brand-orange/10 rounded-full text-brand-orange">
-                    <Trophy size={20} />
+              <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 h-40">
+                 <img src={event.image || '/img/event-placeholder.jpg'} alt={event.name} className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-105 group-hover:scale-100" />
+                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+                 <div className="absolute left-3 top-3 p-2 bg-brand-orange/20 backdrop-blur-md rounded-lg text-brand-orange border border-brand-orange/20">
+                    <Trophy size={16} />
                  </div>
-                 <span className="px-3 py-1 bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-brand-blue">
+                 <span className="absolute right-3 top-3 px-2 py-1 bg-white/10 backdrop-blur-md border border-white/10 text-[7px] font-black uppercase tracking-widest text-brand-blue rounded">
                     {event.status}
                  </span>
               </div>
