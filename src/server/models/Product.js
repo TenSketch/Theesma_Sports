@@ -1,55 +1,69 @@
-import mongoose from 'mongoose';
+import { getAdminDb } from '@/lib/firebase-admin';
 
-const ProductSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please provide a name for this product.'],
-    maxlength: [100, 'Name cannot be more than 100 characters'],
-  },
-  slug: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  category: {
-    type: String,
-    required: [true, 'Please provide a category.'],
-    enum: ['Cricket', 'Football', 'Badminton', 'Gym', 'Running'],
-  },
-  tag: {
-    type: String,
-    default: 'Elite Series',
-  },
-  price: {
-    type: Number,
-    required: [true, 'Please provide a price.'],
-  },
-  description: {
-    type: String,
-    required: [true, 'Please provide a description.'],
-  },
-  technicalSpecs: [
-    {
-      label: String,
-      value: String
+const COLLECTION = 'products';
+
+export default {
+  async find(query = {}) {
+    const db = getAdminDb();
+    let q = db.collection(COLLECTION);
+    
+    if (query.category) {
+      q = q.where('category', '==', query.category);
     }
-  ],
-  images: [String],
-  splineUrl: String,
-  stock: {
-    type: Number,
-    default: 10,
-  },
-  show_price_on_listing: {
-    type: Boolean,
-    default: false, // Curiosity Design Default
-  },
-  featured: {
-    type: Boolean,
-    default: false,
-  }
-}, {
-  timestamps: true,
-});
+    
+    if (query.featured !== undefined) {
+      q = q.where('featured', '==', query.featured);
+    }
 
-export default mongoose.models.Product || mongoose.model('Product', ProductSchema);
+    // Sort by createdAt desc by default
+    const snapshot = await q.orderBy('createdAt', 'desc').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  },
+
+  async findOne(query) {
+    const db = getAdminDb();
+    let q = db.collection(COLLECTION);
+    
+    if (query.slug) {
+      q = q.where('slug', '==', query.slug).limit(1);
+    } else if (query._id) {
+      const doc = await q.doc(query._id).get();
+      return doc.exists ? { id: doc.id, ...doc.data() } : null;
+    }
+
+    const snapshot = await q.get();
+    if (snapshot.empty) return null;
+    
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() };
+  },
+
+  async findById(id) {
+    const db = getAdminDb();
+    const doc = await db.collection(COLLECTION).doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  },
+
+  async create(data) {
+    const db = getAdminDb();
+    const docRef = db.collection(COLLECTION).doc();
+    const newData = {
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    await docRef.set(newData);
+    return { id: docRef.id, ...newData };
+  },
+
+  async updateById(id, data) {
+    const db = getAdminDb();
+    const docRef = db.collection(COLLECTION).doc(id);
+    const updateData = {
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+    await docRef.update(updateData);
+    return { id, ...updateData };
+  }
+};

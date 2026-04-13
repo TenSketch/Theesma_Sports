@@ -1,11 +1,9 @@
-import dbConnect from '@/lib/mongodb';
 import User from '@/server/models/User';
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
 export async function POST(request) {
   try {
-    await dbConnect();
     const { name, email, password } = await request.json();
 
     // Check if user exists
@@ -14,22 +12,22 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'User already exists' }, { status: 400 });
     }
 
-    // Create user
+    // Create user in Firebase Auth and Firestore
     const user = await User.create({
       name,
       email,
       password,
     });
 
-    // Create token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    // Create token (using Firebase UID as id)
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: '30d',
     });
 
     const response = NextResponse.json({
       success: true,
       data: {
-        _id: user._id,
+        _id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -47,6 +45,7 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
+    console.error('Registration Error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

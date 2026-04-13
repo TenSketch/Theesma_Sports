@@ -1,12 +1,10 @@
-import dbConnect from '@/lib/mongodb';
 import Product from '@/server/models/Product';
 import { notFound } from 'next/navigation';
 import ProductDetailClient from './ProductDetailClient';
 
 async function getProduct(slug) {
-  await dbConnect();
   const product = await Product.findOne({ slug });
-  return product ? JSON.parse(JSON.stringify(product)) : null;
+  return product;
 }
 
 export async function generateMetadata({ params }) {

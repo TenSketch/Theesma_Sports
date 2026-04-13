@@ -1,26 +1,37 @@
-const mongoose = require('mongoose');
+const admin = require('firebase-admin');
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Load env vars from .env file
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Load env vars from .env.local
+dotenv.config({ path: path.join(__dirname, '../../.env.local') });
 
-const ProductSchema = new mongoose.Schema({
-  name: String,
-  slug: String,
-  category: String,
-  tag: String,
-  price: Number,
-  description: String,
-  technicalSpecs: [{ label: String, value: String }],
-  images: [String],
-  splineUrl: String,
-  stock: Number,
-  show_price_on_listing: Boolean,
-  featured: Boolean
-}, { timestamps: true });
+if (!admin.apps.length) {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema);
+  if (!projectId || !clientEmail || !privateKey) {
+    console.error('\x1b[31m%s\x1b[0m', 'Error: Missing Firebase Admin credentials in .env.local');
+    console.error('Please ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set.');
+    process.exit(1);
+  }
+
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
+      }),
+    });
+    console.log('Firebase Admin initialized for seeding...');
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+    process.exit(1);
+  }
+}
+
+const db = admin.firestore();
 
 const products = [
   {
@@ -33,7 +44,9 @@ const products = [
     images: ["/img/hero-1.png"],
     stock: 15,
     show_price_on_listing: false,
-    featured: true
+    featured: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     name: "Aero Grip Studs",
@@ -45,7 +58,9 @@ const products = [
     images: ["/img/badminton-hero-img-1.png"],
     stock: 25,
     show_price_on_listing: false,
-    featured: true
+    featured: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     name: "Voltage Racket",
@@ -57,19 +72,29 @@ const products = [
     images: ["/img/badminton-hero-img-2.png"],
     stock: 20,
     show_price_on_listing: false,
-    featured: true
+    featured: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
 
 const seedDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('Connected to MongoDB for seeding...');
+    const productsRef = db.collection('products');
     
-    await Product.deleteMany({});
+    // Clear existing products
+    const snapshot = await productsRef.get();
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
     console.log('Cleared existing products.');
     
-    await Product.insertMany(products);
+    // Insert new products
+    for (const product of products) {
+      await productsRef.add(product);
+    }
     console.log('Database seeded successfully!');
     
     process.exit();

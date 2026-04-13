@@ -51,7 +51,7 @@ export default function AdminOrdersPage() {
   }, []);
 
   const filteredOrders = orders.filter(o => 
-    o._id?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (o.id || o._id)?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     o.status?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -99,7 +99,7 @@ export default function AdminOrdersPage() {
       {/* Orders List */}
       <div className="grid grid-cols-1 gap-4">
         {filteredOrders.map((order) => (
-          <div key={order._id} className="glass p-6 group hover:border-brand-blue/20 transition-all flex flex-col lg:flex-row lg:items-center gap-8 rounded-2xl">
+          <div key={order.id || order._id} className="glass p-6 group hover:border-brand-blue/20 transition-all flex flex-col lg:flex-row lg:items-center gap-8 rounded-2xl">
             
             {/* ID & Date */}
             <div className="flex-shrink-0 lg:w-48">
@@ -107,7 +107,7 @@ export default function AdminOrdersPage() {
                   <div className="p-2 bg-brand-blue/10 rounded-lg text-brand-blue">
                      <Package size={16} />
                   </div>
-                  <p className="text-xs font-black text-white uppercase tracking-tighter">Manifest #{order._id.slice(-6).toUpperCase()}</p>
+                  <p className="text-xs font-black text-white uppercase tracking-tighter">Manifest #{(order.id || order._id).slice(-6).toUpperCase()}</p>
                </div>
                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
                  {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

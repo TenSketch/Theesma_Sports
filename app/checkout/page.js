@@ -1,7 +1,7 @@
 'use client';
 
 import { useCart } from '@/context/CartContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   CreditCard, 
@@ -21,17 +21,41 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     address: '',
     city: '',
     pincode: ''
   });
 
-  const isFormValid = formData.firstName && formData.lastName && formData.email && formData.address && formData.city && formData.pincode;
+  // Verify authentication status before allowing checkout
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        
+        if (!data.success) {
+          router.push(`/auth?redirect=/checkout`);
+        } else {
+          // Pre-fill email if user exists
+          setFormData(prev => ({ ...prev, email: data.data.email, firstName: data.data.name?.split(' ')[0] || '', lastName: data.data.name?.split(' ')[1] || '' }));
+          setCheckingAuth(false);
+        }
+      } catch (err) {
+        router.push(`/auth?redirect=/checkout`);
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  const isFormValid = formData.firstName && formData.lastName && formData.email && formData.phone && formData.address && formData.city && formData.pincode;
 
   const shippingPrice = 0; // Free for now
   const total = subtotal + shippingPrice;
@@ -45,47 +69,117 @@ export default function CheckoutPage() {
     }
   };
 
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-brand-black flex flex-col items-center justify-center text-center p-6">
+        <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent animate-spin rounded-full mb-6"></div>
+        <h2 className="text-xl font-black text-white font-outfit uppercase tracking-widest">Verifying Identity</h2>
+      </div>
+    );
+  }
+
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePayment = async () => {
     if (!agreed) return;
 
     setLoading(true);
     try {
-      const orderData = {
-        orderItems: cartItems.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          image: item.image || item.images[0],
-          price: item.price,
-          product: item._id || item.id, // Support both formats
-          size: item.size
-        })),
-        shippingAddress: {
-          address: formData.address,
-          city: formData.city,
-          postalCode: formData.pincode,
-          country: 'India'
-        },
-        paymentMethod: 'Razorpay',
-        itemsPrice: subtotal,
-        shippingPrice,
-        totalPrice: total
-      };
+      // 1. Load Razorpay Script
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        alert("Payment System Failure: SDK link could not be established.");
+        setLoading(false);
+        return;
+      }
 
-      const res = await fetch('/api/orders', {
+      // 2. Create Razorpay Order
+      const resOrder = await fetch('/api/razorpay/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify({ amount: total })
       });
 
-      const data = await res.json();
-      if (data.success) {
-        clearCart();
-        router.push(`/checkout/success?id=${data.data._id}`);
-      } else {
-        alert("Logistics Sync Failure: " + (data.error || "Unknown Error"));
+      const orderData = await resOrder.json();
+      if (!orderData.success) {
+        throw new Error(orderData.error || "Order generation failed.");
       }
+
+      // 3. Open Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "THEESMA SPORTS",
+        description: "Elite Arsenal Acquisition",
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          // 4. On Payment Success -> Create Local Order
+          try {
+            const resLocalOrder = await fetch('/api/orders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderItems: cartItems.map(item => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  image: item.image || item.images[0],
+                  price: item.price,
+                  product: item._id || item.id,
+                  size: item.size
+                })),
+                shippingAddress: {
+                  address: formData.address,
+                  city: formData.city,
+                  pincode: formData.pincode,
+                  phone: formData.phone
+                },
+                paymentMethod: 'Razorpay',
+                itemsPrice: subtotal,
+                shippingPrice,
+                totalPrice: total,
+                paymentResult: {
+                  id: response.razorpay_payment_id,
+                  status: 'Paid',
+                  update_time: new Date().toISOString()
+                }
+              })
+            });
+
+            const localData = await resLocalOrder.json();
+            if (localData.success) {
+              clearCart();
+              router.push(`/checkout/success?id=${localData.data.id}`);
+            } else {
+              alert("System Sync Failure: " + (localData.error || "Order could not be recorded."));
+            }
+          } catch (err) {
+            alert("Local Sync Error: " + err.message);
+          }
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone
+        },
+        theme: {
+          color: "#1E90FF",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+
     } catch (err) {
-      alert("System Link Error: " + err.message);
+      alert("Payment Link Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -149,6 +243,14 @@ export default function CheckoutPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="bg-white/5 border border-white/10 p-5 text-sm col-span-1 md:col-span-2 focus:outline-none focus:border-brand-blue transition-colors rounded-lg" 
+                />
+                <input 
+                  type="tel" 
+                  placeholder="Phone Number" 
+                  required
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   className="bg-white/5 border border-white/10 p-5 text-sm col-span-1 md:col-span-2 focus:outline-none focus:border-brand-blue transition-colors rounded-lg" 
                 />
                 <input 

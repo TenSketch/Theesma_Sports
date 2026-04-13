@@ -1,10 +1,8 @@
-import dbConnect from '@/lib/mongodb';
 import Order from '@/server/models/Order';
 import { NextResponse } from 'next/server';
 
 export async function PATCH(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
     const { status } = await request.json();
 
@@ -14,15 +12,15 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
-    order.status = status;
+    const updateData = { status };
     if (status === 'Delivered') {
-      order.isDelivered = true;
-      order.deliveredAt = Date.now();
+      updateData.isDelivered = true;
+      updateData.deliveredAt = new Date().toISOString();
     }
     
-    await order.save();
+    const updatedOrder = await Order.updateById(id, updateData);
 
-    return NextResponse.json({ success: true, data: order });
+    return NextResponse.json({ success: true, data: updatedOrder });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

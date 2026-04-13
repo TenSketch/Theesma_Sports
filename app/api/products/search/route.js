@@ -1,10 +1,8 @@
-import dbConnect from '@/lib/mongodb';
 import Product from '@/server/models/Product';
 import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
 
@@ -12,14 +10,16 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: [] });
     }
 
-    // Performance search using Mongoose
-    const products = await Product.find({
-      $or: [
-        { name: { $regex: query, $options: 'i' } },
-        { category: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } }
-      ]
-    }).limit(10);
+    // Basic text search for Firestore (since regex is not natively supported)
+    // For small catalogs, we can fetch all and filter, or use basic comparison.
+    const allProducts = await Product.find({});
+    const normalizedQuery = query.toLowerCase();
+    
+    const products = allProducts.filter(p => 
+      p.name?.toLowerCase().includes(normalizedQuery) ||
+      p.category?.toLowerCase().includes(normalizedQuery) ||
+      p.description?.toLowerCase().includes(normalizedQuery)
+    ).slice(0, 10);
 
     return NextResponse.json({ success: true, data: products });
   } catch (error) {

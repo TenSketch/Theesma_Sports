@@ -2,10 +2,103 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, User, ArrowRight, Globe } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Globe, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function AuthPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/';
+  
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      if (isLogin) {
+        // 1. Sign in with Firebase Client SDK
+        const { signInWithEmailAndPassword } = await import('firebase/auth');
+        const { auth } = await import('@/lib/firebase');
+        
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const idToken = await userCredential.user.getIdToken();
+        
+        // 2. Send ID Token to our API to set session cookie
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          router.push(redirect);
+          router.refresh();
+        } else {
+          alert(data.error || 'Identity Verification Failed');
+        }
+      } else {
+        // Registration still handled by server (creates user in Auth + Firestore)
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          router.push(redirect);
+          router.refresh();
+        } else {
+          alert(data.error || 'Identity Creation Failed');
+        }
+      }
+    } catch (err) {
+      alert('System Link Error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const { auth } = await import('@/lib/firebase');
+      
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        router.push(redirect);
+        router.refresh();
+      } else {
+        alert(data.error || 'Google Sync Failed');
+      }
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        alert('Google Link Error: ' + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-brand-black min-h-screen pt-20 pb-24 px-6 flex items-center justify-center">
@@ -29,13 +122,20 @@ export default function AuthPage() {
           {/* Decorative Corner */}
           <div className="absolute top-0 right-0 w-16 h-16 bg-brand-blue/10 transform rotate-45 translate-x-10 -translate-y-10 group-hover:translate-x-8 group-hover:-translate-y-8 transition-all duration-700" />
           
-          <form className="space-y-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-6 relative z-10" onSubmit={handleAuth}>
             {!isLogin && (
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                  <input type="text" placeholder="Athlete Name" className="w-full bg-white/5 border border-white/10 p-4 pl-12 text-sm focus:outline-none focus:border-brand-blue" />
+                  <input 
+                    type="text" 
+                    placeholder="Athlete Name" 
+                    required={!isLogin}
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 p-4 pl-12 text-sm focus:outline-none focus:border-brand-blue" 
+                  />
                 </div>
               </div>
             )}
@@ -44,7 +144,14 @@ export default function AuthPage() {
               <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                <input type="email" placeholder="athlete@theesma.com" className="w-full bg-white/5 border border-white/10 p-4 pl-12 text-sm focus:outline-none focus:border-brand-blue" />
+                <input 
+                  type="email" 
+                  placeholder="athlete@theesma.com" 
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full bg-white/5 border border-white/10 p-4 pl-12 text-sm focus:outline-none focus:border-brand-blue" 
+                />
               </div>
             </div>
 
@@ -52,7 +159,14 @@ export default function AuthPage() {
               <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                <input type="password" placeholder="••••••••" className="w-full bg-white/5 border border-white/10 p-4 pl-12 text-sm focus:outline-none focus:border-brand-blue" />
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  className="w-full bg-white/5 border border-white/10 p-4 pl-12 text-sm focus:outline-none focus:border-brand-blue" 
+                />
               </div>
             </div>
 
@@ -62,13 +176,25 @@ export default function AuthPage() {
                </div>
             )}
 
-            <button className="w-full bg-white text-black py-5 text-sm font-black uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all flex items-center justify-center gap-2 group/btn">
-              {isLogin ? 'Login Now' : 'Sign Up'} <ArrowRight className="group-hover/btn:translate-x-2 transition-transform" size={18} />
+            <button 
+              disabled={loading}
+              className="w-full bg-white text-black py-5 text-sm font-black uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all flex items-center justify-center gap-2 group/btn"
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : (
+                <>
+                  {isLogin ? 'Login Now' : 'Sign Up'} <ArrowRight className="group-hover/btn:translate-x-2 transition-transform" size={18} />
+                </>
+              )}
             </button>
           </form>
 
           {/* Social Auth */}
-            <button className="w-full bg-white/5 border border-white/10 py-4 text-xs font-bold uppercase tracking-widest text-white flex items-center justify-center gap-3 hover:bg-white/10 transition-all">
+            <button 
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full bg-white/5 border border-white/10 py-4 text-xs font-bold uppercase tracking-widest text-white flex items-center justify-center gap-3 hover:bg-white/10 transition-all disabled:opacity-50"
+            >
               <Globe size={18} className="text-brand-blue" />
               Continue with Google
             </button>

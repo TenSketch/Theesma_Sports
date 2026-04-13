@@ -1,4 +1,3 @@
-import dbConnect from '@/lib/mongodb';
 import Order from '@/server/models/Order';
 import Product from '@/server/models/Product';
 import User from '@/server/models/User';
@@ -6,7 +5,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    await dbConnect();
 
     // In a real app, we'd add admin auth middleware check here
     

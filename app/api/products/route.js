@@ -1,10 +1,8 @@
-import dbConnect from '@/lib/mongodb';
 import Product from '@/server/models/Product';
 import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const featured = searchParams.get('featured');
@@ -13,7 +11,7 @@ export async function GET(request) {
     if (category) query.category = category;
     if (featured) query.featured = true;
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const products = await Product.find(query);
 
     return NextResponse.json({ success: true, data: products });
   } catch (error) {
@@ -23,7 +21,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    await dbConnect();
     const body = await request.json();
     const product = await Product.create(body);
     return NextResponse.json({ success: true, data: product }, { status: 201 });

@@ -67,8 +67,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} bg-brand-black`}>
-      <body className="min-h-screen flex flex-col font-inter text-white selection:bg-brand-blue/30 antialiased overflow-x-hidden">
+    <html lang="en" className={`${inter.variable} ${outfit.variable} bg-brand-black`} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col font-inter text-white selection:bg-brand-blue/30 antialiased overflow-x-hidden" suppressHydrationWarning>
         <CartProvider>
           <Header />
           <CartDrawer />

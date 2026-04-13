@@ -1,10 +1,8 @@
-import dbConnect from '@/lib/mongodb';
 import Product from '@/server/models/Product';
 import { NextResponse } from 'next/server';
 
 export async function GET(request, { params }) {
   try {
-    await dbConnect();
     const { slug } = await params;
     const product = await Product.findOne({ slug });
 
