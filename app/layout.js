@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import PageWrapper from "@/components/layout/PageWrapper";
 import CartDrawer from "@/components/cart/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
+import ClientLayout from "./ClientLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -69,16 +70,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} bg-brand-black`}>
       <body className="min-h-screen flex flex-col font-inter text-white selection:bg-brand-blue/30 antialiased overflow-x-hidden">
-        <CartProvider>
-          <Header />
-          <CartDrawer />
-          <main className="flex-grow">
-            <PageWrapper>
-              {children}
-            </PageWrapper>
-          </main>
-          <Footer />
-        </CartProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

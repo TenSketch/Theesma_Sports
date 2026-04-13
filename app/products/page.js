@@ -1,19 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ProductCard from '@/components/product/ProductCard';
-import { SAMPLE_PRODUCTS } from '@/lib/sampleData';
 import { Filter, X, ChevronRight } from 'lucide-react';
 
 export default function ProductsPage() {
   const [selectedSport, setSelectedSport] = useState('All');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = selectedSport === 'All' 
-    ? SAMPLE_PRODUCTS 
-    : SAMPLE_PRODUCTS.filter(p => p.category === selectedSport);
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success) {
+          setProducts(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to load products', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
-  const sports = ['All', 'Cricket', 'Football', 'Badminton', 'Gym', 'Running'];
+  const sports = ['All', ...Array.from(new Set(products.map((p) => p.category))).filter(Boolean)];
+  const filteredProducts = selectedSport === 'All'
+    ? products
+    : products.filter(p => p.category === selectedSport);
 
   return (
     <div className="bg-brand-black min-h-screen pt-24 pb-24 px-6 font-inter">
@@ -31,12 +48,12 @@ export default function ProductsPage() {
           
           <div className="flex items-center gap-4">
              <span className="text-[10px] font-black uppercase tracking-widest text-white/30 hidden md:block italic">Filter by discipline</span>
-             <div className="flex gap-2 bg-white/5 p-1 rounded-full border border-white/5">
+             <div className="flex flex-wrap gap-2 bg-white/5 p-1 rounded-full border border-white/5">
                 {sports.map((sport) => (
                   <button
                     key={sport}
                     onClick={() => setSelectedSport(sport)}
-                    className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                    className={`px-4 md:px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                       selectedSport === sport 
                       ? 'bg-brand-blue text-white shadow-lg shadow-blue-500/20' 
                       : 'text-gray-500 hover:text-white'

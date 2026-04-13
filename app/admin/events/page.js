@@ -17,9 +17,9 @@ export default function AdminEventsPage() {
   
   // Mock data for events
   const events = [
-    { id: 1, name: "Theesma Smash Open", date: "2024-08-15", location: "Chennai", status: "Open" },
-    { id: 2, name: "Iron Grip Push", date: "2024-09-02", location: "Mumbai", status: "Open" },
-    { id: 3, name: "Vanquish Cup Season 4", date: "2024-10-12", location: "Bangalore", status: "Coming Soon" }
+    { id: 1, name: "Theesma Smash Open", date: "2024-08-15", location: "Chennai", status: "Open", image: "/img/event-1.jpg" },
+    { id: 2, name: "Iron Grip Push", date: "2024-09-02", location: "Mumbai", status: "Open", image: "/img/event-2.jpg" },
+    { id: 3, name: "Vanquish Cup Season 4", date: "2024-10-12", location: "Bangalore", status: "Coming Soon", image: "/img/event-3.jpg" }
   ];
 
   return (
@@ -55,14 +55,16 @@ export default function AdminEventsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
           <div key={event.id} className="bg-white/5 border border-white/10 p-8 group hover:border-brand-blue/30 transition-all">
-            <div className="flex justify-between items-start mb-8">
-               <div className="p-3 bg-brand-orange/10 rounded-full text-brand-orange">
-                  <Trophy size={20} />
-               </div>
-               <span className="px-3 py-1 bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-brand-blue">
-                  {event.status}
-               </span>
-            </div>
+            <div className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-white/5 h-48">
+             <img src={event.image || '/img/event-placeholder.jpg'} alt={event.name} className="h-full w-full object-cover" />
+             <div className="absolute inset-0 bg-black/40" />
+             <div className="absolute left-4 top-4 p-3 bg-brand-orange/10 rounded-full text-brand-orange">
+                <Trophy size={20} />
+             </div>
+             <span className="absolute right-4 top-4 px-3 py-1 bg-white/10 border border-white/10 text-[8px] font-black uppercase tracking-widest text-brand-blue">
+                {event.status}
+             </span>
+          </div>
 
             <h3 className="text-xl font-black uppercase tracking-tighter mb-6 group-hover:text-brand-blue transition-colors leading-tight">
               {event.name}

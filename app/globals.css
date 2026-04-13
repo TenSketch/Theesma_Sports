@@ -58,6 +58,23 @@ h6 {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.custom-scrollbar-horizontal::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.custom-scrollbar-horizontal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(20px);

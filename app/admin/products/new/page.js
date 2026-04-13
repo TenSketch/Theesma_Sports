@@ -22,12 +22,38 @@ export default function NewProductPage() {
     name: '',
     slug: '',
     category: 'Cricket',
+    category_id: 'cricket',
     price: '',
     stock: '',
     description: '',
     show_price_on_listing: false,
-    images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff'] // Default placeholder
+    images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff'],
+    sizes: ['M', 'L'],
+    variants: ['Carbon', 'Speed'],
   });
+  const [autoSlug, setAutoSlug] = useState(true);
+
+  const generateSlug = (baseName, sizes, variants) => {
+    const slugBase = baseName?.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const extra = sizes?.[0] || variants?.[0] || '';
+    const suffix = extra ? `-${extra.toLowerCase().replace(/\s+/g, '-')}` : '';
+    return `${slugBase}${suffix}`.replace(/--+/g, '-').replace(/^-|-$/g, '');
+  };
+
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const newImages = files.map((file, index) => ({
+      id: Date.now() + index,
+      url: URL.createObjectURL(file),
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, ...newImages.map((file) => file.url)],
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,21 +111,45 @@ export default function NewProductPage() {
                   required
                   placeholder="e.g. Carbon Fiber Pro Racket"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      name,
+                      slug: autoSlug ? generateSlug(name, prev.sizes, prev.variants) : prev.slug,
+                    }));
+                  }}
                   className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white focus:outline-none focus:border-brand-blue"
                 />
              </div>
 
              <div className="space-y-2">
                 <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">System Slug (Unique ID)</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="racket-carbon-pro"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/ /g, '-')})}
-                  className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white font-mono focus:outline-none focus:border-brand-blue"
-                />
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="racket-carbon-pro"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/ /g, '-')})}
+                    className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white font-mono focus:outline-none focus:border-brand-blue"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAutoSlug(!autoSlug);
+                      if (!autoSlug) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          slug: generateSlug(prev.name, prev.sizes, prev.variants),
+                        }));
+                      }
+                    }}
+                    className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded ${autoSlug ? 'bg-brand-blue text-black' : 'bg-white/5 text-gray-400'}`}
+                  >
+                    {autoSlug ? 'Auto' : 'Manual'}
+                  </button>
+                </div>
              </div>
 
              <div className="space-y-2">
@@ -112,6 +162,85 @@ export default function NewProductPage() {
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className="w-full bg-white/5 border border-white/10 p-4 text-sm text-white focus:outline-none focus:border-brand-blue"
                 />
+             </div>
+
+             <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-2">
+                   <div className="flex items-center justify-between gap-3">
+                     <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">Sizes</label>
+                     <button
+                       type="button"
+                       onClick={() => setFormData((prev) => ({ ...prev, sizes: [...prev.sizes, ''] }))}
+                       className="text-[10px] uppercase font-black tracking-widest text-brand-blue"
+                     >+ Add</button>
+                   </div>
+                   <div className="space-y-3">
+                     {formData.sizes.map((size, index) => (
+                       <div key={index} className="flex items-center gap-3">
+                         <input
+                           type="text"
+                           value={size}
+                           onChange={(e) => {
+                             const nextSizes = [...formData.sizes];
+                             nextSizes[index] = e.target.value;
+                             setFormData((prev) => ({
+                               ...prev,
+                               sizes: nextSizes,
+                               slug: autoSlug ? generateSlug(prev.name, nextSizes, prev.variants) : prev.slug,
+                             }));
+                           }}
+                           className="flex-1 bg-white/5 border border-white/10 p-3 text-sm text-white focus:outline-none focus:border-brand-blue"
+                         />
+                         <button
+                           type="button"
+                           onClick={() => setFormData((prev) => ({
+                             ...prev,
+                             sizes: prev.sizes.filter((_, idx) => idx !== index),
+                           }))}
+                           className="text-[10px] font-black uppercase tracking-widest text-brand-orange"
+                         >Remove</button>
+                       </div>
+                     ))}
+                   </div>
+                </div>
+                <div className="space-y-2">
+                   <div className="flex items-center justify-between gap-3">
+                     <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">Variants</label>
+                     <button
+                       type="button"
+                       onClick={() => setFormData((prev) => ({ ...prev, variants: [...prev.variants, ''] }))}
+                       className="text-[10px] uppercase font-black tracking-widest text-brand-blue"
+                     >+ Add</button>
+                   </div>
+                   <div className="space-y-3">
+                     {formData.variants.map((variant, index) => (
+                       <div key={index} className="flex items-center gap-3">
+                         <input
+                           type="text"
+                           value={variant}
+                           onChange={(e) => {
+                             const nextVariants = [...formData.variants];
+                             nextVariants[index] = e.target.value;
+                             setFormData((prev) => ({
+                               ...prev,
+                               variants: nextVariants,
+                               slug: autoSlug ? generateSlug(prev.name, prev.sizes, nextVariants) : prev.slug,
+                             }));
+                           }}
+                           className="flex-1 bg-white/5 border border-white/10 p-3 text-sm text-white focus:outline-none focus:border-brand-blue"
+                         />
+                         <button
+                           type="button"
+                           onClick={() => setFormData((prev) => ({
+                             ...prev,
+                             variants: prev.variants.filter((_, idx) => idx !== index),
+                           }))}
+                           className="text-[10px] font-black uppercase tracking-widest text-brand-orange"
+                         >Remove</button>
+                       </div>
+                     ))}
+                   </div>
+                </div>
              </div>
           </div>
 
@@ -148,7 +277,7 @@ export default function NewProductPage() {
                 <label className="text-[10px] uppercase font-black tracking-widest text-gray-400">Category</label>
                 <select 
                   value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  onChange={(e) => setFormData({...formData, category: e.target.value, category_id: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
                   className="w-full bg-black border border-white/10 p-4 text-sm text-white focus:outline-none focus:border-brand-blue"
                 >
                   <option>Cricket</option>
@@ -177,10 +306,27 @@ export default function NewProductPage() {
            </div>
 
            <div className="bg-white/5 border border-white/10 p-8 space-y-4">
-              <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">Product Graphics</p>
-              <div className="aspect-square bg-black border border-dashed border-white/20 flex flex-col items-center justify-center gap-2 group cursor-pointer hover:border-brand-blue/40 transition-all">
-                 <ImageIcon size={24} className="text-gray-700 group-hover:text-brand-blue" />
-                 <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Upload Placeholder</span>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">Product Graphics</p>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-gray-500">{formData.images.length} files</span>
+              </div>
+              <label className="block cursor-pointer rounded-3xl bg-white/5 border border-dashed border-white/20 p-8 text-center hover:border-brand-blue/40 transition-all">
+                 <ImageIcon size={24} className="text-gray-700 mb-3" />
+                 <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Upload multiple image assets</p>
+                 <input
+                   type="file"
+                   multiple
+                   accept="image/*"
+                   onChange={handleFileUpload}
+                   className="hidden"
+                 />
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {formData.images.map((src, index) => (
+                  <div key={src + index} className="h-20 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                    <img src={src} alt={`Upload preview ${index + 1}`} className="h-full w-full object-cover" />
+                  </div>
+                ))}
               </div>
            </div>
 

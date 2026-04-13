@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Hero from '@/components/hero/Hero';
 import CategoryShowcase from '@/components/product/CategoryShowcase';
 import SportsMarquee from '@/components/ui/SportsMarquee';
 import ProductCard from '@/components/product/ProductCard';
 import EventCard from '@/components/events/EventCard';
-import { SAMPLE_PRODUCTS } from '@/lib/sampleData';
 import { ArrowRight, Quote } from 'lucide-react';
 import Link from 'next/link';
 import gsap from 'gsap';
@@ -38,8 +37,25 @@ export default function Home() {
   const storyRef = useRef(null);
   const splitSectionRef = useRef(null);
   const splitParallaxRefs = useRef([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success) {
+          setFeaturedProducts(data.data.slice(0, 4));
+        }
+      } catch (error) {
+        console.error('Failed to load featured products', error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+    loadProducts();
+
     const ctx = gsap.context(() => {
       // Scroll Storytelling
       const sections = storyRef.current?.querySelectorAll('.story-section') || [];
@@ -126,11 +142,19 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {SAMPLE_PRODUCTS.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loadingProducts ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="h-96 bg-white/5 animate-pulse rounded-3xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id || product._id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   Users,
   ShoppingBag,
-  Settings
+  Settings,
+  Trophy
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -40,9 +41,51 @@ export default function AdminDashboard() {
   }, []);
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-32 space-y-4">
-       <div className="w-8 h-8 border-2 border-brand-blue border-t-transparent animate-spin rounded-full" />
-       <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] animate-pulse">Synchronizing Intelligence...</p>
+    <div className="space-y-12">
+      {/* Stats Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-8 h-8 bg-white/10 rounded-lg"></div>
+              <div className="w-6 h-6 bg-white/10 rounded"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="w-16 h-4 bg-white/10 rounded"></div>
+              <div className="w-12 h-6 bg-white/10 rounded"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Actions Skeleton */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
+        <div className="w-32 h-6 bg-white/10 rounded mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="w-full h-12 bg-white/10 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Orders Skeleton */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
+        <div className="w-40 h-6 bg-white/10 rounded mb-6"></div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white/10 rounded-full"></div>
+                <div className="space-y-2">
+                  <div className="w-24 h-4 bg-white/10 rounded"></div>
+                  <div className="w-16 h-3 bg-white/10 rounded"></div>
+                </div>
+              </div>
+              <div className="w-16 h-4 bg-white/10 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 
@@ -65,6 +108,27 @@ export default function AdminDashboard() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="glass p-8 rounded-3xl">
+        <h4 className="text-lg font-bold font-outfit text-white mb-6 flex items-center gap-2">
+          <Zap size={18} className="text-brand-blue" /> Quick Actions
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/admin/products/new" className="flex items-center justify-center gap-3 px-6 py-4 bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/20 rounded-xl transition-all duration-300 group">
+            <Package size={18} className="text-brand-blue group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-bold text-white">Add Product</span>
+          </Link>
+          <Link href="/admin/events" className="flex items-center justify-center gap-3 px-6 py-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-xl transition-all duration-300 group">
+            <Trophy size={18} className="text-brand-orange group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-bold text-white">Add Event</span>
+          </Link>
+          <Link href="/admin/orders" className="flex items-center justify-center gap-3 px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 group">
+            <ShoppingBag size={18} className="text-gray-400 group-hover:text-white transition-colors" />
+            <span className="text-sm font-bold text-white">View Orders</span>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

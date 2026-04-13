@@ -12,8 +12,13 @@ import {
   Trophy, 
   LogOut,
   LayoutDashboard,
-  ShieldAlert
+  ShieldAlert,
+  Menu,
+  X,
+  Bell,
+  Image
 } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -21,6 +26,7 @@ const navItems = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Events', href: '/admin/events', icon: Trophy },
   { name: 'Customers', href: '/admin/customers', icon: Users },
+  { name: 'Media', href: '/admin/media', icon: Image },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
@@ -30,6 +36,7 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     // In production, this would be a server-side check or a JWT verification
@@ -57,8 +64,18 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-black overflow-hidden font-inter">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 bg-black/50 backdrop-blur-xl flex flex-col z-30">
+      <aside className={`fixed md:relative left-0 top-0 h-full w-64 border-r border-white/10 bg-black/50 backdrop-blur-xl flex flex-col z-50 transition-transform duration-300 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
         <div className="p-8">
           <Link href="/admin" className="text-xl font-black tracking-tighter text-white">
             THEESMA <span className="text-brand-blue">ADMIN</span>
@@ -97,17 +114,28 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow overflow-y-auto custom-scrollbar bg-black relative">
+      <main className="flex-grow overflow-y-auto custom-scrollbar bg-black relative md:ml-0">
         {/* Background Ambient Glow */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-blue/5 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-brand-orange/5 blur-[100px] pointer-events-none rounded-full" />
         
         {/* Top Header */}
         <header className="sticky top-0 z-20 bg-black/40 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase tracking-widest text-white/40">
-            {navItems.find(item => item.href === pathname)?.name || 'Command Center'}
-          </h2>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="md:hidden text-white hover:text-brand-blue transition-colors"
+            >
+              {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <h2 className="text-sm font-black uppercase tracking-widest text-white/40">
+              {navItems.find(item => item.href === pathname)?.name || 'Command Center'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:border-brand-blue transition-all">
+              <Bell size={18} />
+            </button>
             <div className="flex flex-col items-end">
                <p className="text-xs font-black text-white">Vicky Admin</p>
                <p className="text-[10px] font-bold text-brand-blue uppercase tracking-tighter">System Administrator</p>
@@ -122,6 +150,16 @@ export default function AdminLayout({ children }) {
           {children}
         </div>
       </main>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#000',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.1)',
+          },
+        }}
+      />
     </div>
   );
 }

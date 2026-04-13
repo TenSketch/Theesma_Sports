@@ -16,6 +16,7 @@ import Link from 'next/link';
 
 export default function ProductDetailClient({ product }) {
   const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedImage, setSelectedImage] = useState(product.images?.[0] || product.image || '/img/gear.png');
   const { addToCart, setCartOpen } = useCart();
 
   const handleAddToCart = () => {
@@ -42,10 +43,10 @@ export default function ProductDetailClient({ product }) {
           <div className="w-full lg:w-1/2">
             <div className="relative aspect-square bg-white/5 overflow-hidden group rounded-3xl border border-white/5">
               <Image 
-                src={product.images[0]} 
+                src={selectedImage}
                 alt={product.name}
                 fill
-                className="object-cover transition-all duration-700 group-hover:scale-105"
+                className="object-cover transition-all duration-700 group-hover:scale-105 hover:scale-110"
               />
               <div className="absolute top-6 left-6 flex flex-col gap-2">
                 <span className="px-3 py-1 bg-brand-orange text-[8px] font-bold uppercase tracking-widest text-white rounded-full">
@@ -57,6 +58,21 @@ export default function ProductDetailClient({ product }) {
               </div>
             </div>
             
+            {/* Product Thumbnails */}
+            {product.images?.length > 1 && (
+              <div className="mt-6 flex items-center gap-3 overflow-x-auto custom-scrollbar custom-scrollbar-horizontal py-2">
+                {product.images.map((image, index) => (
+                  <button
+                    key={image + index}
+                    onClick={() => setSelectedImage(image)}
+                    className={`h-20 w-20 rounded-3xl overflow-hidden border ${selectedImage === image ? 'border-brand-blue' : 'border-white/10'} transition-all duration-300`}
+                  >
+                    <img src={image} alt={`${product.name} angle ${index + 1}`} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Engineering Specs Peek */}
             <div className="grid grid-cols-2 gap-4 mt-6">
                <div className="glass p-6 rounded-2xl">

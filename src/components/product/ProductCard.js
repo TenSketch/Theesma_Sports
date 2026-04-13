@@ -78,15 +78,16 @@ export default function ProductCard({ product }) {
       className="group relative bg-[#0a0a0a] border border-white/5 hover:border-brand-blue/20 transition-all duration-700 overflow-hidden hover:shadow-[0_0_40px_rgba(0,112,243,0.08)] transform-gpu"
     >
       {/* Image */}
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <Link href={`/products/${product.slug || 'product'}`} className="relative aspect-[4/5] overflow-hidden block">
         <Image
-          src={product.image || product.images?.[0] || '/img/gear.png'}
+          src={product.images?.[0] || '/img/gear.png'}
           alt={product.name}
           fill
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-cover transition-transform duration-1000 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/40 opacity-50 group-hover:opacity-20 transition-opacity duration-700" />
+      </Link>
 
         {/* Badge */}
         <div className="absolute top-4 left-4 z-10">
@@ -110,7 +111,6 @@ export default function ProductCard({ product }) {
             }`}
           />
         </button>
-      </div>
 
       {/* Content */}
       <div className="p-6 relative z-10 bg-[#0a0a0a]">

@@ -16,6 +16,9 @@ const ProductSchema = new mongoose.Schema({
     required: [true, 'Please provide a category.'],
     enum: ['Cricket', 'Football', 'Badminton', 'Gym', 'Running'],
   },
+  category_id: {
+    type: String,
+  },
   tag: {
     type: String,
     default: 'Elite Series',
@@ -34,6 +37,8 @@ const ProductSchema = new mongoose.Schema({
       value: String
     }
   ],
+  sizes: [String],
+  variants: [String],
   images: [String],
   splineUrl: String,
   stock: {
