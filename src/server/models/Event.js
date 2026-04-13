@@ -1,41 +1,23 @@
 import { getAdminDb } from '@/lib/firebase-admin';
 
-const COLLECTION = 'products';
+const COLLECTION = 'events';
 
 export default {
   async find(query = {}) {
     const db = getAdminDb();
     let q = db.collection(COLLECTION);
     
-    if (query.category) {
-      q = q.where('category', '==', query.category);
+    if (query.sport) {
+      q = q.where('sport', '==', query.sport);
     }
     
-    if (query.featured !== undefined) {
-      q = q.where('featured', '==', query.featured);
+    if (query.status) {
+      q = q.where('status', '==', query.status);
     }
 
-    // Sort by createdAt desc by default
+    // Sort by date or createdAt
     const snapshot = await q.orderBy('createdAt', 'desc').get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  },
-
-  async findOne(query) {
-    const db = getAdminDb();
-    let q = db.collection(COLLECTION);
-    
-    if (query.slug) {
-      q = q.where('slug', '==', query.slug).limit(1);
-    } else if (query._id) {
-      const doc = await q.doc(query._id).get();
-      return doc.exists ? { id: doc.id, ...doc.data() } : null;
-    }
-
-    const snapshot = await q.get();
-    if (snapshot.empty) return null;
-    
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() };
   },
 
   async findById(id) {
@@ -49,6 +31,7 @@ export default {
     const docRef = db.collection(COLLECTION).doc();
     const newData = {
       ...data,
+      status: data.status || 'Scheduled',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

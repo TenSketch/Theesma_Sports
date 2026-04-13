@@ -12,13 +12,15 @@ import {
   Eye, 
   EyeOff,
   Package,
-  ArrowUpDown
+  ArrowUpDown,
+  Loader2
 } from 'lucide-react';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -43,6 +45,28 @@ export default function AdminProductsPage() {
   );
 
   if (loading) return <div className="text-white/20 uppercase tracking-widest text-xs animate-pulse">Scanning Inventory...</div>;
+
+
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("CONFIRM DECOMMISSION: This will permanently remove this asset from the arsenal. Proceed?")) return;
+    
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      
+      if (data.success) {
+        setProducts(products.filter(p => p.id !== id));
+      } else {
+        alert("Sector Failure: " + data.error);
+      }
+    } catch (e) {
+      alert("System Sync Failure");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -148,11 +172,18 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <button className="p-2 bg-white/5 text-gray-500 hover:text-white transition-colors border border-transparent hover:border-white/10 rounded">
+                    <Link 
+                      href={`/admin/products/${product.id || product._id}/edit`}
+                      className="p-2 bg-white/5 text-gray-500 hover:text-white transition-colors border border-transparent hover:border-white/10 rounded block"
+                    >
                       <Edit size={14} />
-                    </button>
-                    <button className="p-2 bg-white/5 text-gray-500 hover:text-brand-orange transition-colors border border-transparent hover:border-white/10 rounded">
-                       <Trash2 size={14} />
+                    </Link>
+                    <button 
+                      onClick={() => handleDelete(product.id || product._id)}
+                      disabled={deletingId === (product.id || product._id)}
+                      className="p-2 bg-white/5 text-gray-500 hover:text-brand-orange transition-colors border border-transparent hover:border-white/10 rounded disabled:opacity-30"
+                    >
+                      {deletingId === (product.id || product._id) ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />}
                     </button>
                   </div>
                 </td>

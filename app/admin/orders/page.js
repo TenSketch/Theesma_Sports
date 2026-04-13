@@ -9,7 +9,8 @@ import {
   AlertCircle,
   MoreHorizontal,
   Package,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,6 +27,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -73,9 +75,32 @@ export default function AdminOrdersPage() {
     </div>
   );
 
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    setUpdatingId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setOrders(orders.map(o => (o.id || o._id) === orderId ? { ...o, status: newStatus } : o));
+      } else {
+        alert("Failed to update manifest: " + data.error);
+      }
+    } catch (e) {
+      alert("System sync failure during status transition.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      {/* Header */}
+      {/* Header ... same */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-white font-outfit">Order Pipeline.</h1>
@@ -123,18 +148,33 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Financial & Logistics */}
-            <div className="flex lg:flex-col lg:items-end justify-between items-center lg:justify-center gap-2 lg:w-40 border-t lg:border-t-0 lg:border-l border-white/5 pt-4 lg:pt-0 lg:pl-8">
+            <div className="flex lg:flex-col lg:items-end justify-between items-center lg:justify-center gap-3 lg:w-48 border-t lg:border-t-0 lg:border-l border-white/5 pt-4 lg:pt-0 lg:pl-8">
                <p className="text-xl font-black text-white">₹{order.totalPrice?.toLocaleString()}</p>
-               <span className={`px-3 py-1 border text-[8px] font-black uppercase tracking-[0.2em] rounded-full inline-flex items-center gap-2 ${statusColors[order.status] || 'text-gray-500 border-white/10'}`}>
-                 <div className="w-1 h-1 rounded-full bg-current" />
-                 {order.status}
-               </span>
+               
+               <div className="relative group/select">
+                 {updatingId === (order.id || order._id) ? (
+                   <Loader2 className="animate-spin text-brand-blue absolute -left-6 top-1/2 -translate-y-1/2" size={14} />
+                 ) : null}
+                 <select 
+                   value={order.status}
+                   onChange={(e) => handleStatusChange(order.id || order._id, e.target.value)}
+                   disabled={updatingId === (order.id || order._id)}
+                   className={`px-3 py-1 bg-black border text-[8px] font-black uppercase tracking-[0.2em] rounded-full outline-none cursor-pointer transition-all ${statusColors[order.status] || 'text-gray-500 border-white/10'}`}
+                 >
+                   {Object.keys(statusColors).map(status => (
+                     <option key={status} value={status} className="bg-black text-white">{status}</option>
+                   ))}
+                 </select>
+               </div>
             </div>
 
             <div className="flex justify-between items-center lg:block lg:border-l border-white/5 lg:pl-8">
-               <button className="h-12 w-12 bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-brand-blue/40 transition-all rounded-xl flex items-center justify-center">
-                  <MoreHorizontal size={20} />
-               </button>
+               <Link 
+                  href={`/checkout/success?id=${order.id || order._id}`}
+                  className="h-12 w-12 bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-brand-blue/40 transition-all rounded-xl flex items-center justify-center"
+                >
+                  <ArrowRight size={20} />
+               </Link>
             </div>
 
           </div>

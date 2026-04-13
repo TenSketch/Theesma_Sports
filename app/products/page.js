@@ -1,19 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProductCard from '@/components/product/ProductCard';
-import { SAMPLE_PRODUCTS } from '@/lib/sampleData';
-import { Filter, X, ChevronRight } from 'lucide-react';
+import { Filter, X, ChevronRight, Loader2 } from 'lucide-react';
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState('All');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success) {
+           setProducts(data.data || []);
+        }
+      } catch (e) {
+        console.error('Logistics Sync Failure', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
 
   const filteredProducts = selectedSport === 'All' 
-    ? SAMPLE_PRODUCTS 
-    : SAMPLE_PRODUCTS.filter(p => p.category === selectedSport);
+    ? products 
+    : products.filter(p => p.category === selectedSport);
 
   const sports = ['All', 'Cricket', 'Football', 'Badminton', 'Gym', 'Running'];
+
+  if (loading) {
+    return (
+      <div className="bg-brand-black min-h-screen flex flex-col items-center justify-center space-y-4">
+         <Loader2 className="text-brand-blue animate-spin" size={32} />
+         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 animate-pulse">Scanning Arsenal Logs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-brand-black min-h-screen pt-24 pb-24 px-6 font-inter">

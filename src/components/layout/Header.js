@@ -3,12 +3,18 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, Menu, X, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Hide header on admin pages
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
   const { cartItems, toggleCart } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

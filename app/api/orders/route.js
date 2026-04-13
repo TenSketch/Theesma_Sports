@@ -58,7 +58,19 @@ export async function GET(request) {
     }
 
     const decoded = jwt.verify(cookie.value, process.env.JWT_SECRET);
-    const orders = await Order.find({ user: decoded.id });
+    
+    // Check if user is admin
+    const User = (await import('@/server/models/User')).default;
+    const user = await User.findById(decoded.id);
+    
+    let orders;
+    if (user && user.role === 'admin') {
+      // Admin sees ALL orders
+      orders = await Order.find({});
+    } else {
+      // Standard user sees only their orders
+      orders = await Order.find({ user: decoded.id });
+    }
 
     return NextResponse.json({ success: true, data: orders });
   } catch (error) {

@@ -1,43 +1,53 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Hero from '@/components/hero/Hero';
 import CategoryShowcase from '@/components/product/CategoryShowcase';
 import SportsMarquee from '@/components/ui/SportsMarquee';
 import ProductCard from '@/components/product/ProductCard';
 import EventCard from '@/components/events/EventCard';
-import { SAMPLE_PRODUCTS } from '@/lib/sampleData';
-import { ArrowRight, Quote } from 'lucide-react';
+import { ArrowRight, Quote, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const events = [
-  {
-    id: 1,
-    title: 'Grand Slam Series 2026',
-    type: 'Championship',
-    stats: { stat1: '4M+ Views', stat2: '128 Athletes' },
-    image: '/img/tournament.png',
-    meta: '5 Cities · 1200+ Players',
-  },
-  {
-    id: 2,
-    title: 'The Velocity Invitational',
-    type: 'Exhibition',
-    stats: { stat1: 'Elite Rank', stat2: 'Global Feed' },
-    image: '/img/training.png',
-    meta: '3 Cities · 400+ Athletes',
-  },
-];
-
 export default function Home() {
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const containerRef = useRef(null);
   const storyRef = useRef(null);
   const splitSectionRef = useRef(null);
   const splitParallaxRefs = useRef([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // Fetch featured products
+        const prodRes = await fetch('/api/products?featured=true');
+        const prodData = await prodRes.json();
+        if (prodData.success) {
+           setFeaturedProducts(prodData.data?.slice(0, 4) || []);
+        }
+
+        // Fetch events
+        const eventRes = await fetch('/api/events');
+        const eventData = await eventRes.json();
+        if (eventData.success) {
+           setEvents(eventData.data?.slice(0, 2) || []);
+        }
+      } catch (e) {
+        console.error('Home Data Sync Failure', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -127,10 +137,15 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {SAMPLE_PRODUCTS.slice(0, 4).map((product) => (
+            {featuredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+          {featuredProducts.length === 0 && !loading && (
+            <div className="py-20 text-center border border-dashed border-white/5 opacity-30">
+               <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest italic">Awaiting featured arsenal synchronization...</p>
+            </div>
+          )}
         </div>
       </section>
 

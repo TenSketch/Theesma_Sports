@@ -1,36 +1,39 @@
-import { Trophy, Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Trophy, Calendar, MapPin, Users, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function EventsPage() {
-  const upcomingEvents = [
-    {
-      id: 1,
-      name: "Theesma Smash Open 2024",
-      sport: "Badminton",
-      date: "August 15-20",
-      location: "Chennai, TN",
-      prize: "₹50,000",
-      image: "https://images.unsplash.com/photo-1613918431208-6733f01730bb?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      id: 2,
-      name: "Iron Grip Push Invitational",
-      sport: "Gym & Fitness",
-      date: "September 02",
-      location: "Mumbai, MH",
-      prize: "₹1,00,000",
-      image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      id: 3,
-      name: "Vanquish Cup Season 4",
-      sport: "Cricket",
-      date: "October 12-25",
-      location: "Bangalore, KA",
-      prize: "₹2,50,000",
-      image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=800"
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        if (data.success) {
+           setUpcomingEvents(data.data || []);
+        }
+      } catch (e) {
+        console.error('Arena Sync Failure', e);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    fetchEvents();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-brand-black min-h-screen flex flex-col items-center justify-center space-y-4">
+         <Loader2 className="text-brand-blue animate-spin" size={32} />
+         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 animate-pulse">Establishing Arena Uplink...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-brand-black min-h-screen pt-12 pb-24 px-6 text-white font-inter">

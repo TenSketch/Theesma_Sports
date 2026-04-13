@@ -27,37 +27,39 @@ export default function EventCard({ event }) {
       <div className="absolute inset-0 p-8 flex flex-col justify-end">
         <div className="mb-4">
           <span className="px-3 py-1 bg-brand-blue text-[7px] font-black uppercase tracking-widest text-white">
-            {event.type || 'Championship'}
+            {event.sport || event.type || 'Championship'}
           </span>
         </div>
 
         <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-          {event.title}
+          {event.name || event.title}
         </h3>
 
         {/* Meta stats */}
-        {event.meta && (
+        {(event.location || event.date || event.meta) && (
           <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/40 mb-4 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-75">
-            {event.meta}
+            {event.location} {event.location && event.date ? '·' : ''} {event.date} {(!event.location && !event.date) ? event.meta : ''}
           </p>
         )}
 
         <div className="flex items-center gap-8 mb-6 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
           <div>
-            <p className="text-[7px] text-white/40 uppercase font-black mb-1">Impact</p>
-            <p className="text-sm font-bold text-white">{event.stats?.stat1 || '4M+ Views'}</p>
+            <p className="text-[7px] text-white/40 uppercase font-black mb-1">Status</p>
+            <p className="text-sm font-bold text-white uppercase">{event.status || 'Active'}</p>
           </div>
-          <div>
-            <p className="text-[7px] text-white/40 uppercase font-black mb-1">Elite Count</p>
-            <p className="text-sm font-bold text-white">{event.stats?.stat2 || '128 Athletes'}</p>
-          </div>
+          {event.prize && (
+            <div>
+              <p className="text-[7px] text-white/40 uppercase font-black mb-1">Reward</p>
+              <p className="text-sm font-bold text-white uppercase">{event.prize}</p>
+            </div>
+          )}
         </div>
 
         <Link 
           href={`/events/${event.id}`}
           className="inline-flex items-center gap-2 text-white text-[10px] font-bold uppercase tracking-widest group/btn translate-y-10 group-hover:translate-y-0 transition-all duration-500 delay-200"
         >
-          View Case Study <ArrowUpRight size={14} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+          {event.name ? 'Join Arena' : 'View Case Study'} <ArrowUpRight size={14} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
         </Link>
       </div>
     </div>
