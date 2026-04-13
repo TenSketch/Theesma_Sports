@@ -1,0 +1,75 @@
+[{
+  "_id": {
+    "$oid": "69da8f2edf7164348d354923"
+  },
+  "name": "Carbon Pro Bat",
+  "slug": "carbon-pro-bat",
+  "category": "Cricket",
+  "tag": "Pro Performance",
+  "price": 4999,
+  "description": "Multi-layered carbon fiber technology for explosive power and lightweight handling.",
+  "images": [
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
+  ],
+  "stock": 15,
+  "show_price_on_listing": false,
+  "featured": true,
+  "technicalSpecs": [],
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-04-11T18:13:02.618Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-11T18:13:02.618Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69da8f2edf7164348d354924"
+  },
+  "name": "Aero Grip Studs",
+  "slug": "aero-grip-studs",
+  "category": "Football",
+  "tag": "Speed Elite",
+  "price": 2499,
+  "description": "Next-gen stud configuration for ultimate traction on any turf.",
+  "images": [
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
+  ],
+  "stock": 25,
+  "show_price_on_listing": false,
+  "featured": true,
+  "technicalSpecs": [],
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-04-11T18:13:02.619Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-11T18:13:02.619Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69da8f2edf7164348d354925"
+  },
+  "name": "Voltage Racket",
+  "slug": "voltage-racket",
+  "category": "Badminton",
+  "tag": "Power Player",
+  "price": 3299,
+  "description": "Hyper-responsive frame design for high-tension smashes.",
+  "images": [
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff"
+  ],
+  "stock": 20,
+  "show_price_on_listing": false,
+  "featured": true,
+  "technicalSpecs": [],
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-04-11T18:13:02.619Z"
+  },
+  "updatedAt": {
+    "$date": "2026-04-11T18:13:02.619Z"
+  }
+}]
